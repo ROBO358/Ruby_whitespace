@@ -1,12 +1,13 @@
 require 'logger'
 require 'optparse'
+require 'strscan'
 
 # 適当なタイミングでバージョン更新を行う
 # メジャーバージョン.マイナーバージョン.パッチバージョン
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.1.0'
+Version = '0.2.0'
 
 class WHITESPACE
     # ログ出力用
@@ -14,6 +15,60 @@ class WHITESPACE
 
     ## リリース用レベル
     @@logger.level = Logger::WARN
+
+    # IMPシンボル表
+    @@imp = {
+        " " => :stack,
+        "\t " => :arithmetic,
+        "\t\t" => :heap,
+        "\n" => :flow,
+        "\t\n" => :io,
+    }
+
+    # CMDシンボル表
+    # stack操作
+    @@cmd_stack = {
+        " " => :push,
+        "\n " => :dup,
+        "\t " => :copy,
+        "\n\t" => :swap,
+        "\n\n" => :discard,
+        "\t\n" => :slide,
+    }
+
+    # 算術演算
+    @@cmd_arithmetic = {
+        "  " => :add,
+        " \t" => :sub,
+        " \n" => :mul,
+        "\t " => :div,
+        "\t\t" => :mod,
+    }
+
+    # ヒープアクセス
+    @@cmd_heap = {
+        " " => :store,
+        "\t" => :retrieve,
+    }
+
+    # フロー制御
+    @@cmd_flow = {
+        "  " => :mark,
+        " \t" => :call,
+        " \n" => :jump,
+        "\t " => :jump0,
+        "\t\t" => :jumpn,
+        "\t\n" => :ret,
+        "\n\n" => :end,
+    }
+
+    # I/O制御
+    @@cmd_io = {
+        "  " => :output_label,
+        " \t" => :output_num,
+        "\t " => :read_chara,
+        "\t\t" => :read_num,
+    }
 
     # インスタンス化時に実行される
     def initialize
@@ -44,8 +99,135 @@ class WHITESPACE
             @@logger.fatal("ファイルが指定されていません")
             exit
         end
+
+        tokens = _tokenize(@buffer)
+        @@logger.debug("tokens: #{tokens}")
     end
 
+    # 字句解析
+    private def _tokenize(code)
+        tokens = []
+        scanner = StringScanner.new(code)
+
+        while code.length > 0
+            imp, scanner = _imp_cutout(scanner)
+            @@logger.debug("imp: #{imp}")
+            cmd, scanner = _cmd_cutout(imp, scanner)
+            @@logger.debug("cmd: #{cmd}")
+            param, scanner = _param_cutout(cmd, scanner)
+            @@logger.debug("param: #{param}")
+            if !param.nil?
+                tokens << imp << cmd << param
+            else
+                tokens << imp << cmd
+            end
+            @@logger.debug("tokenize: #{imp} #{cmd} #{param}")
+            @@logger.debug("tokenize_array: #{tokens}")
+
+            break if cmd == :end
+        end
+
+        return tokens
+    end
+
+    # IMP切り出し
+    private def _imp_cutout(scanner)
+        @@logger.debug("scanner: #{scanner.inspect}")
+        unless scanner.scan(/ |\n|\t[ \n\t]/)
+            raise Exception, "IMPが不正です"
+        end
+
+        imp = nil
+        if @@imp.has_key?(scanner.matched)
+            imp = @@imp[scanner.matched]
+        else
+            raise Exception, "IMPが不正です"
+        end
+
+        return imp, scanner
+    end
+
+    # CMD切り出し
+    private def _cmd_cutout(imp, scanner)
+        @@logger.debug("imp: #{imp}, scanner: #{scanner.inspect}")
+        cmd = nil
+        cmd_symbol = nil
+        err = false
+
+        case imp
+        # stack操作
+        when :stack
+            unless scanner.scan(/ |\n |\n\t|\n\n/)
+                err = true
+            else
+                cmd_symbol = @@cmd_stack
+            end
+
+        # 算術演算
+        when :arithmetic
+            unless scanner.scan(/  | \t| \n|\t |\t\t/)
+                err = true
+            else
+                cmd_symbol = @@cmd_arithmetic
+            end
+
+        # ヒープアクセス
+        when :heap
+            unless scanner.scan(/ |\t/)
+                err = true
+            else
+                cmd_symbol = @@cmd_heap
+            end
+
+        # フロー制御
+        when :flow
+            unless scanner.scan(/  | \t| \n|\t |\t\t|\t\n|\n\n/)
+                err = true
+            else
+                cmd_symbol = @@cmd_flow
+            end
+
+        # IO
+        when :io
+            unless scanner.scan(/  | \t|\t |\t\t/)
+                err = true
+            else
+                cmd_symbol = @@cmd_io
+            end
+
+        else
+            err = true
+        end
+
+        raise Exception, "CMDが不正です" if err
+
+        cmd = nil
+        if cmd_symbol.has_key?(scanner.matched)
+            cmd = cmd_symbol[scanner.matched]
+        else
+            raise Exception, "IMPが不正です"
+        end
+
+        return cmd, scanner
+    end
+
+    # PARAM切り出し
+    private def _param_cutout(cmd, scanner)
+        @@logger.debug("cmd: #{cmd}, scanner: #{scanner.inspect}")
+        param = nil
+
+        if cmd.match?(/push|copy|slide|mark|call|jump|jump0|jumpn/)
+            unless scanner.scan(/[ \t]+\n/)
+                raise Exception, "PARAMが不正です"
+            end
+        else
+            return nil, scanner
+        end
+
+        param = scanner.matched
+
+        return param, scanner
+    end
 end
 
 WHITESPACE.new
