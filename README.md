@@ -1,0 +1,2 @@
+# Ruby_whitespace
+Rubyで書かれたwhitespaceインタプリタ
