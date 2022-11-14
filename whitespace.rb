@@ -100,6 +100,7 @@ class WHITESPACE
             exit
         end
 
+        # 字句解析実行
         tokens = _tokenize(@buffer)
         @@logger.debug("tokens: #{tokens}")
     end
@@ -109,21 +110,31 @@ class WHITESPACE
         tokens = []
         scanner = StringScanner.new(code)
 
+        # 末端まで読み込む
         while code.length > 0
+            # impの取得
             imp, scanner = _imp_cutout(scanner)
             @@logger.debug("imp: #{imp}")
+
+            # cmdの取得
             cmd, scanner = _cmd_cutout(imp, scanner)
             @@logger.debug("cmd: #{cmd}")
+
+            # paramの取得
             param, scanner = _param_cutout(cmd, scanner)
             @@logger.debug("param: #{param}")
+
+            # paramがある場合は、impとcmd,paramを結合
             if !param.nil?
                 tokens << imp << cmd << param
+            # paramがない場合は、impとcmdを結合
             else
                 tokens << imp << cmd
             end
             @@logger.debug("tokenize: #{imp} #{cmd} #{param}")
             @@logger.debug("tokenize_array: #{tokens}")
 
+            # 末端まで読み込んだ場合は、ループを抜ける
             break if cmd == :end
         end
 
@@ -133,11 +144,14 @@ class WHITESPACE
     # IMP切り出し
     private def _imp_cutout(scanner)
         @@logger.debug("scanner: #{scanner.inspect}")
+
+        # IMPの切り出し
         unless scanner.scan(/ |\n|\t[ \n\t]/)
             raise Exception, "IMPが不正です"
         end
 
         imp = nil
+        # IMPをシンボルに変換
         if @@imp.has_key?(scanner.matched)
             imp = @@imp[scanner.matched]
         else
@@ -154,6 +168,7 @@ class WHITESPACE
         cmd_symbol = nil
         err = false
 
+        # IMPによって、切り出すCMDを変更
         case imp
         # stack操作
         when :stack
@@ -202,6 +217,8 @@ class WHITESPACE
         raise Exception, "CMDが不正です" if err
 
         cmd = nil
+
+        # CMDをシンボルに変換
         if cmd_symbol.has_key?(scanner.matched)
             cmd = cmd_symbol[scanner.matched]
         else
@@ -216,6 +233,7 @@ class WHITESPACE
         @@logger.debug("cmd: #{cmd}, scanner: #{scanner.inspect}")
         param = nil
 
+        # PARAMがあるCMDの場合、PARAMを切り出す
         if cmd.match?(/push|copy|slide|mark|call|jump|jump0|jumpn/)
             unless scanner.scan(/[ \t]+\n/)
                 raise Exception, "PARAMが不正です"
@@ -224,10 +242,12 @@ class WHITESPACE
             return nil, scanner
         end
 
+        # 取得したPARAMをローカル変数へ格納(今後の変換のため)
         param = scanner.matched
 
         return param, scanner
     end
 end
 
+# 実行
 WHITESPACE.new
