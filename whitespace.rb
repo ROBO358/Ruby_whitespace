@@ -125,10 +125,10 @@ class WHITESPACE
 
             # paramがある場合は、impとcmd,paramを結合
             if !param.nil?
-                tokens << imp << cmd << param
+                tokens.push([imp, cmd, param])
             # paramがない場合は、impとcmdを結合
             else
-                tokens << imp << cmd
+                tokens.push([imp, cmd])
             end
 
             @logger.debug("tokenize: #{imp} #{cmd} #{param}")
