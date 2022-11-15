@@ -111,7 +111,7 @@ class WHITESPACE
         scanner = StringScanner.new(code)
 
         # 末端まで読み込む
-        while code.length > 0
+        while !scanner.eos?
             # impの取得
             imp, scanner = _imp_cutout(scanner)
             @@logger.debug("imp: #{imp}")
