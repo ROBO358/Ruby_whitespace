@@ -66,7 +66,7 @@ class WHITESPACE
 
     # インスタンス化時に実行される
     def initialize
-        @buffer = nil
+        buffer = nil
 
         # ログ出力用
         @logger = Logger.new(STDOUT)
@@ -89,7 +89,7 @@ class WHITESPACE
         # ファイルが指定されていた場合、ファイルを開く
         if ARGV.length > 0
             begin
-                @buffer = ARGF.read
+                buffer = ARGF.read
             rescue Errno::ENOENT => e
                 @logger.fatal(e.message)
                 exit
@@ -100,7 +100,7 @@ class WHITESPACE
         end
 
         # 字句解析実行
-        tokens = _tokenize(@buffer)
+        tokens = _tokenize(buffer)
         @logger.debug("tokens: #{tokens}")
     end
 
