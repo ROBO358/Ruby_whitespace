@@ -10,14 +10,8 @@ require 'strscan'
 Version = '0.2.0'
 
 class WHITESPACE
-    # ログ出力用
-    @@logger = Logger.new(STDOUT)
-
-    ## リリース用レベル
-    @@logger.level = Logger::WARN
-
     # IMPシンボル表
-    @@imp = {
+    Imp = {
         " " => :stack,
         "\t " => :arithmetic,
         "\t\t" => :heap,
@@ -27,7 +21,7 @@ class WHITESPACE
 
     # CMDシンボル表
     # stack操作
-    @@cmd_stack = {
+    Cmd_stack = {
         " " => :push,
         "\n " => :dup,
         "\t " => :copy,
@@ -37,7 +31,7 @@ class WHITESPACE
     }
 
     # 算術演算
-    @@cmd_arithmetic = {
+    Cmd_arithmetic = {
         "  " => :add,
         " \t" => :sub,
         " \n" => :mul,
@@ -46,13 +40,13 @@ class WHITESPACE
     }
 
     # ヒープアクセス
-    @@cmd_heap = {
+    Cmd_heap = {
         " " => :store,
         "\t" => :retrieve,
     }
 
     # フロー制御
-    @@cmd_flow = {
+    Cmd_flow = {
         "  " => :mark,
         " \t" => :call,
         " \n" => :jump,
@@ -63,7 +57,7 @@ class WHITESPACE
     }
 
     # I/O制御
-    @@cmd_io = {
+    Cmd_io = {
         "  " => :output_label,
         " \t" => :output_num,
         "\t " => :read_chara,
@@ -74,35 +68,40 @@ class WHITESPACE
     def initialize
         @buffer = nil
 
+        # ログ出力用
+        @logger = Logger.new(STDOUT)
+        ## リリース用レベル
+        @logger.level = Logger::WARN
+
         # OptionParserのインスタンスを作成
-        @opt = OptionParser.new
+        opt = OptionParser.new
 
         # 各オプション(.parse!時実行)
         # デバッグ用
-        @opt.on('-d', '--debug') {@@logger.level = Logger::DEBUG}
+        opt.on('-d', '--debug') {@logger.level = Logger::DEBUG}
 
         # オプションを切り取る
-        @opt.parse!(ARGV)
+        opt.parse!(ARGV)
 
         # デバッグ状態の確認
-        @@logger.debug('DEBUG MODE')
+        @logger.debug('DEBUG MODE')
 
         # ファイルが指定されていた場合、ファイルを開く
         if ARGV.length > 0
             begin
                 @buffer = ARGF.read
             rescue Errno::ENOENT => e
-                @@logger.fatal(e.message)
+                @logger.fatal(e.message)
                 exit
             end
         else
-            @@logger.fatal("ファイルが指定されていません")
+            @logger.fatal("ファイルが指定されていません")
             exit
         end
 
         # 字句解析実行
         tokens = _tokenize(@buffer)
-        @@logger.debug("tokens: #{tokens}")
+        @logger.debug("tokens: #{tokens}")
     end
 
     # 字句解析
@@ -114,15 +113,15 @@ class WHITESPACE
         while !scanner.eos?
             # impの取得
             imp, scanner = _imp_cutout(scanner)
-            @@logger.debug("imp: #{imp}")
+            @logger.debug("imp: #{imp}")
 
             # cmdの取得
             cmd, scanner = _cmd_cutout(imp, scanner)
-            @@logger.debug("cmd: #{cmd}")
+            @logger.debug("cmd: #{cmd}")
 
             # paramの取得
             param, scanner = _param_cutout(cmd, scanner)
-            @@logger.debug("param: #{param}")
+            @logger.debug("param: #{param}")
 
             # paramがある場合は、impとcmd,paramを結合
             if !param.nil?
@@ -131,8 +130,9 @@ class WHITESPACE
             else
                 tokens << imp << cmd
             end
-            @@logger.debug("tokenize: #{imp} #{cmd} #{param}")
-            @@logger.debug("tokenize_array: #{tokens}")
+
+            @logger.debug("tokenize: #{imp} #{cmd} #{param}")
+            @logger.debug("tokenize_array: #{tokens}")
         end
 
         return tokens
@@ -140,7 +140,7 @@ class WHITESPACE
 
     # IMP切り出し
     private def _imp_cutout(scanner)
-        @@logger.debug("scanner: #{scanner.inspect}")
+        @logger.debug("scanner: #{scanner.inspect}")
 
         # IMPの切り出し
         unless scanner.scan(/ |\n|\t[ \n\t]/)
@@ -149,8 +149,8 @@ class WHITESPACE
 
         imp = nil
         # IMPをシンボルに変換
-        if @@imp.has_key?(scanner.matched)
-            imp = @@imp[scanner.matched]
+        if Imp.has_key?(scanner.matched)
+            imp = Imp[scanner.matched]
         else
             raise Exception, "IMPが不正です"
         end
@@ -160,7 +160,7 @@ class WHITESPACE
 
     # CMD切り出し
     private def _cmd_cutout(imp, scanner)
-        @@logger.debug("imp: #{imp}, scanner: #{scanner.inspect}")
+        @logger.debug("imp: #{imp}, scanner: #{scanner.inspect}")
         cmd = nil
         cmd_symbol = nil
         err = false
@@ -172,7 +172,7 @@ class WHITESPACE
             unless scanner.scan(/ |\n |\n\t|\n\n/)
                 err = true
             else
-                cmd_symbol = @@cmd_stack
+                cmd_symbol = Cmd_stack
             end
 
         # 算術演算
@@ -180,7 +180,7 @@ class WHITESPACE
             unless scanner.scan(/  | \t| \n|\t |\t\t/)
                 err = true
             else
-                cmd_symbol = @@cmd_arithmetic
+                cmd_symbol = Cmd_arithmetic
             end
 
         # ヒープアクセス
@@ -188,7 +188,7 @@ class WHITESPACE
             unless scanner.scan(/ |\t/)
                 err = true
             else
-                cmd_symbol = @@cmd_heap
+                cmd_symbol = Cmd_heap
             end
 
         # フロー制御
@@ -196,7 +196,7 @@ class WHITESPACE
             unless scanner.scan(/  | \t| \n|\t |\t\t|\t\n|\n\n/)
                 err = true
             else
-                cmd_symbol = @@cmd_flow
+                cmd_symbol = Cmd_flow
             end
 
         # IO
@@ -204,7 +204,7 @@ class WHITESPACE
             unless scanner.scan(/  | \t|\t |\t\t/)
                 err = true
             else
-                cmd_symbol = @@cmd_io
+                cmd_symbol = Cmd_io
             end
 
         else
@@ -227,7 +227,7 @@ class WHITESPACE
 
     # PARAM切り出し
     private def _param_cutout(cmd, scanner)
-        @@logger.debug("cmd: #{cmd}, scanner: #{scanner.inspect}")
+        @logger.debug("cmd: #{cmd}, scanner: #{scanner.inspect}")
         param = nil
 
         # PARAMがあるCMDの場合、PARAMを切り出す
