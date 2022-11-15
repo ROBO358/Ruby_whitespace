@@ -133,9 +133,6 @@ class WHITESPACE
             end
             @@logger.debug("tokenize: #{imp} #{cmd} #{param}")
             @@logger.debug("tokenize_array: #{tokens}")
-
-            # 末端まで読み込んだ場合は、ループを抜ける
-            break if cmd == :end
         end
 
         return tokens
