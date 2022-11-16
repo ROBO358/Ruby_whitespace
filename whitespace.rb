@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.5.0'
+Version = '0.6.0'
 
 class WHITESPACE
     # IMPシンボル表
@@ -255,13 +255,13 @@ class WHITESPACE
         @stack = []
         @heap = {}
         @subroutine = []
-        pc = 0
+        @pc = 0
 
         loop do
-            imp, cmd, param = tokens[pc]
+            imp, cmd, param = tokens[@pc]
             @logger.debug("imp: #{imp}, cmd: #{cmd}, param: #{param.inspect}")
 
-            pc += 1
+            @pc += 1
 
             # 存在しないコマンドを呼び出さないように
             # 正規表現にて存在しないものは呼び出しできないが、人間は愚かなので編集忘れてインジェクションされそうなので
@@ -331,6 +331,9 @@ class WHITESPACE
 
         case cmd
         when :mark
+            p = _to_i(param)
+            @logger.debug("FLOW: mark: #{p}(#{@pc})")
+            @heap[p] = @pc
         when :call
         when :jump
         when :jump0
