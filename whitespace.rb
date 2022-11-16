@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.2.0'
+Version = '0.3.0'
 
 class WHITESPACE
     # IMPシンボル表
@@ -102,11 +102,16 @@ class WHITESPACE
         # 字句解析実行
         tokens = _tokenize(buffer)
         @logger.debug("tokens: #{tokens}")
+
+        # 意味解析実行
+        _evaluate(tokens)
+
     end
 
     # 字句解析
     private def _tokenize(code)
         tokens = []
+
         scanner = StringScanner.new(code)
 
         # 末端まで読み込む
@@ -121,7 +126,7 @@ class WHITESPACE
 
             # paramの取得
             param, scanner = _param_cutout(cmd, scanner)
-            @logger.debug("param: #{param}")
+            @logger.debug("param: #{param.inspect}")
 
             # paramがある場合は、impとcmd,paramを結合
             if !param.nil?
@@ -244,6 +249,109 @@ class WHITESPACE
 
         return param, scanner
     end
+
+    # 実行
+    private def _evaluate(tokens)
+        @stack = []
+        @heap = {}
+        @subroutine = []
+        pc = 0
+
+        loop do
+            imp, cmd, param = tokens[pc]
+            @logger.debug("imp: #{imp}, cmd: #{cmd}, param: #{param.inspect}")
+
+            pc += 1
+
+            # 存在しないコマンドを呼び出さないように
+            # 正規表現にて存在しないものは呼び出しできないが、人間は愚かなので編集忘れてインジェクションされそうなので
+            if Imp.values.include?(imp)
+                @logger.debug("self.send: _#{imp.name}")
+                # コマンドの実行
+                self.send("_#{imp.name}", cmd, param)
+
+            # 定義されていない場合
+            else
+                @logger.debug("imp: #{imp} is not defined")
+                raise Exception, "存在しない操作です"
+            end
+        end
+    end
+
+    private def _stack(cmd, param)
+        @logger.debug("STACK: cmd: #{cmd}, param: #{param.inspect}")
+
+        case cmd
+        when :push
+        when :dup
+        when :copy
+        when :swap
+        when :discard
+        when :slide
+        else
+            @logger.debug("cmd: #{cmd} is not defined")
+            raise Exception, "存在しない操作です"
+        end
+    end
+
+    private def _arithmetic(cmd, param)
+        @logger.debug("ARITHMETIC: cmd: #{cmd}, param: #{param.inspect}")
+
+        case cmd
+        when :add
+        when :sub
+        when :mul
+        when :div
+        when :mod
+        else
+            @logger.debug("cmd: #{cmd} is not defined")
+            raise Exception, "存在しない操作です"
+        end
+    end
+
+    private def _heap(cmd, param)
+        @logger.debug("HEAP: cmd: #{cmd}, param: #{param.inspect}")
+
+        case cmd
+        when :store
+        when :retrieve
+        else
+            @logger.debug("cmd: #{cmd} is not defined")
+            raise Exception, "存在しない操作です"
+        end
+    end
+
+    private def _flow(cmd, param)
+        @logger.debug("FLOW: cmd: #{cmd}, param: #{param.inspect}")
+
+        case cmd
+        when :mark
+        when :call
+        when :jump
+        when :jump0
+        when :jumpn
+        when :ret
+        when :end
+        else
+            @logger.debug("cmd: #{cmd} is not defined")
+            raise Exception, "存在しない操作です"
+        end
+    end
+
+    private def _io(cmd, param)
+        @logger.debug("IO: cmd: #{cmd}, param: #{param.inspect}")
+
+        case cmd
+        when :output_label
+        when :output_num
+        when :read_chara
+        when :read_num
+        else
+            @logger.debug("cmd: #{cmd} is not defined")
+            raise Exception, "存在しない操作です"
+        end
+    end
+
 end
 
 # 実行
