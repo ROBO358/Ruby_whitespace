@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.6.0'
+Version = '0.6.1'
 
 class WHITESPACE
     # IMPシンボル表
@@ -284,8 +284,6 @@ class WHITESPACE
         case cmd
         when :push
             num = _to_i(param)
-            @logger.debug("STACK: push: #{num}")
-            @logger.debug("STACK: before: #{@stack}")
             @stack.push(num)
             @logger.debug("STACK: after: #{@stack}")
         when :dup
@@ -363,7 +361,6 @@ class WHITESPACE
     end
 
     private def _to_i(param)
-        @logger.debug("param: #{param.inspect}")
 
         # 正負判定
         num = '+' if param[0] == " "
@@ -376,7 +373,6 @@ class WHITESPACE
         num += param[0..-2]
 
         # 2進数を10進数に変換
-        @logger.debug("num: #{num}(2)")
         num = num.to_i(2)
         @logger.debug("num: #{num}(10)")
 
