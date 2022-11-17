@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.12.0'
+Version = '0.12.1'
 
 class WHITESPACE
     # IMPシンボル表
@@ -261,6 +261,7 @@ class WHITESPACE
         loop do
             imp, cmd, param = @tokens[@pc]
             @logger.debug("imp: #{imp}, cmd: #{cmd}, param: #{param.inspect}")
+            @logger.debug("pc: #{@pc}")
 
             @pc += 1
 
@@ -352,15 +353,13 @@ class WHITESPACE
             if @stack.pop == 0
                 _jump(param)
             else
-                @logger.debug("FLOW: jump0: skip")
-                @pc += 1
+                @logger.debug("FLOW: jump0: skip(to: #{_to_i(param)})")
             end
         when :jumpn
             if @stack.pop < 0
                 _jump(param)
             else
-                @logger.warn("FLOW: jumpn: skip")
-                @pc += 1
+                @logger.debug("FLOW: jumpn: skip(to: #{_to_i(param)})")
             end
         when :ret
         when :end
@@ -378,11 +377,11 @@ class WHITESPACE
             unless @label.has_key?(p)
                 @tokens.each_with_index do |token, i|
                     if token[0] == :flow && token[1] == :mark && token[2] != nil
-                        p = _to_i(token[2])
-                        @logger.debug("FLOW: jump: #{p}(#{i})")
-                        @label[p] = i
+                        pp = _to_i(token[2])
+                        @logger.debug("FLOW: mark: #{pp}(#{i})")
+                        @label[pp] = i
 
-                        if p == _to_i(token[2])
+                        if p == pp
                             break
                         end
                     end
@@ -390,8 +389,10 @@ class WHITESPACE
             end
 
             if @label.has_key?(p)
+                @logger.debug("FLOW: jump: #{p}(#{@label[p]})")
                 @pc = @label[p]
             else
+                @logger.debug("FLOW: jump: #{p} is not defined")
                 raise Exception, "存在しないラベルです"
             end
         end
@@ -429,7 +430,7 @@ class WHITESPACE
 
         # 2進数を10進数に変換
         num = num.to_i(2)
-        @logger.debug("num: #{num}(10)")
+        @logger.debug("num: #{num}")
 
         return num
     end
