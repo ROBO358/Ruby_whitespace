@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.9.1'
+Version = '0.9.2'
 
 class WHITESPACE
     # IMPシンボル表
@@ -286,10 +286,8 @@ class WHITESPACE
         when :push
             num = _to_i(param)
             @stack.push(num)
-            @logger.debug("STACK: after: #{@stack}")
         when :dup
             @stack.push(@stack.last)
-            @logger.debug("STACK: after: #{@stack}")
         when :copy
         when :swap
         when :discard
@@ -298,6 +296,8 @@ class WHITESPACE
             @logger.debug("cmd: #{cmd} is not defined")
             raise Exception, "存在しない操作です"
         end
+
+        @logger.debug("STACK: after: #{@stack}")
     end
 
     private def _arithmetic(cmd, param)
