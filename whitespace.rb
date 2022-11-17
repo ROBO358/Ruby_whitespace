@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.10.0'
+Version = '0.11.0'
 
 class WHITESPACE
     # IMPシンボル表
@@ -100,11 +100,11 @@ class WHITESPACE
         end
 
         # 字句解析実行
-        tokens = _tokenize(buffer)
-        @logger.debug("tokens: #{tokens}")
+        @tokens = _tokenize(buffer)
+        @logger.debug("tokens: #{@tokens}")
 
         # 意味解析実行
-        _evaluate(tokens)
+        _evaluate()
 
     end
 
@@ -251,7 +251,7 @@ class WHITESPACE
     end
 
     # 実行
-    private def _evaluate(tokens)
+    private def _evaluate()
         @stack = []
         @heap = {}
         @label = {}
@@ -259,7 +259,7 @@ class WHITESPACE
         @pc = 0
 
         loop do
-            imp, cmd, param = tokens[@pc]
+            imp, cmd, param = @tokens[@pc]
             @logger.debug("imp: #{imp}, cmd: #{cmd}, param: #{param.inspect}")
 
             @pc += 1
@@ -346,8 +346,21 @@ class WHITESPACE
             @label[p] = @pc
         when :call
         when :jump
+            _jump(param)
         when :jump0
+            if @stack.pop == 0
+                _jump(param)
+            else
+                @logger.debug("FLOW: jump0: skip")
+                @pc += 1
+            end
         when :jumpn
+            if @stack.pop < 0
+                _jump(param)
+            else
+                @logger.warn("FLOW: jumpn: skip")
+                @pc += 1
+            end
         when :ret
         when :end
             @logger.debug("FLOW: end")
@@ -355,6 +368,31 @@ class WHITESPACE
         else
             @logger.debug("cmd: #{cmd} is not defined")
             raise Exception, "存在しない操作です"
+        end
+
+        def _jump(param)
+            p = _to_i(param)
+            @logger.debug("FLOW: jump: #{p}")
+
+            unless @label.has_key?(p)
+                @tokens.each_with_index do |token, i|
+                    if token[0] == :flow && token[1] == :mark && token[2] != nil
+                        p = _to_i(token[2])
+                        @logger.debug("FLOW: jump: #{p}(#{i})")
+                        @label[p] = i
+
+                        if p == _to_i(token[2])
+                            break
+                        end
+                    end
+                end
+            end
+
+            if @label.has_key?(p)
+                @pc = @label[p]
+            else
+                raise Exception, "存在しないラベルです"
+            end
         end
     end
 
