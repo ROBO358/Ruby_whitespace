@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.12.1'
+Version = '0.12.2'
 
 class WHITESPACE
     # IMPシンボル表
@@ -111,6 +111,9 @@ class WHITESPACE
     # 字句解析
     private def _tokenize(code)
         tokens = []
+
+        # 不要なコメントを削除
+        code = code.delete("^[ \n\t]")
 
         scanner = StringScanner.new(code)
 
