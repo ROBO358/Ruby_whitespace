@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.14.0'
+Version = '0.15.0'
 
 class WHITESPACE
     # IMPシンボル表
@@ -349,35 +349,6 @@ class WHITESPACE
     private def _flow(cmd, param)
         @logger.debug("FLOW: cmd: #{cmd}, param: #{param.inspect}")
 
-        case cmd
-        when :mark
-            p = _to_i(param)
-            @logger.debug("FLOW: mark: #{p}(#{@pc})")
-            @label[p] = @pc
-        when :call
-        when :jump
-            _jump(param)
-        when :jump0
-            if @stack.pop == 0
-                _jump(param)
-            else
-                @logger.debug("FLOW: jump0: skip(to: #{_to_i(param)})")
-            end
-        when :jumpn
-            if @stack.pop < 0
-                _jump(param)
-            else
-                @logger.debug("FLOW: jumpn: skip(to: #{_to_i(param)})")
-            end
-        when :ret
-        when :end
-            @logger.debug("FLOW: end")
-            exit
-        else
-            @logger.debug("cmd: #{cmd} is not defined")
-            raise Exception, "存在しない操作です"
-        end
-
         def _jump(param)
             p = _to_i(param)
             @logger.debug("FLOW: jump: #{p}")
@@ -403,6 +374,37 @@ class WHITESPACE
                 @logger.debug("FLOW: jump: #{p} is not defined")
                 raise Exception, "存在しないラベルです"
             end
+        end
+
+        case cmd
+        when :mark
+            p = _to_i(param)
+            @logger.debug("FLOW: mark: #{p}(#{@pc})")
+            @label[p] = @pc
+        when :call
+            @subroutine.push(@pc)
+            _jump(param)
+        when :jump
+            _jump(param)
+        when :jump0
+            if @stack.pop == 0
+                _jump(param)
+            else
+                @logger.debug("FLOW: jump0: skip(to: #{_to_i(param)})")
+            end
+        when :jumpn
+            if @stack.pop < 0
+                _jump(param)
+            else
+                @logger.debug("FLOW: jumpn: skip(to: #{_to_i(param)})")
+            end
+        when :ret
+        when :end
+            @logger.debug("FLOW: end")
+            exit
+        else
+            @logger.debug("cmd: #{cmd} is not defined")
+            raise Exception, "存在しない操作です"
         end
     end
 
