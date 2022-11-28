@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.19.0'
+Version = '0.19.1'
 
 class WHITESPACE
     # IMPシンボル表
@@ -321,15 +321,15 @@ class WHITESPACE
 
         case cmd
         when :add
-            @stack.push(f_elm + s_elm)
+            @stack.push(s_elm + f_elm)
         when :sub
-            @stack.push(f_elm - s_elm)
+            @stack.push(s_elm - f_elm)
         when :mul
-            @stack.push(f_elm * s_elm)
+            @stack.push(s_elm * f_elm)
         when :div
-            @stack.push(f_elm / s_elm)
+            @stack.push(s_elm / f_elm)
         when :mod
-            @stack.push(f_elm % s_elm)
+            @stack.push(s_elm % f_elm)
         else
             @logger.debug("cmd: #{cmd} is not defined")
             raise Exception, "存在しない操作です"
