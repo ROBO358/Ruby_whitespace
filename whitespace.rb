@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.12.2'
+Version = '0.13.0'
 
 class WHITESPACE
     # IMPシンボル表
@@ -334,6 +334,9 @@ class WHITESPACE
 
         case cmd
         when :store
+            value = @stack.pop
+            key = @stack.pop
+            @heap[key] = value
         when :retrieve
         else
             @logger.debug("cmd: #{cmd} is not defined")
