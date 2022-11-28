@@ -99,6 +99,9 @@ class WHITESPACE
             exit
         end
 
+        STDIN.sync = true
+        STDOUT.sync = true
+
         # 字句解析実行
         @tokens = _tokenize(buffer)
         @logger.debug("tokens: #{@tokens}")
@@ -415,12 +418,18 @@ class WHITESPACE
         case cmd
         when :output_label
             @logger.debug("IO: output_label: #{@stack.last.to_s}")
-            print @stack.pop.chr
+            print @stack.pop.chr(Encoding::UTF_8)
         when :output_num
             @logger.debug("IO: output_num: #{@stack.last}")
             print @stack.pop.to_i
         when :read_chara
+            key = @stack.pop
+            value = STDIN.gets(limit = 1).ord
+            @heap[key] = value
         when :read_num
+            key = @stack.pop
+            value = STDIN.gets.to_i
+            @heap[key] = value
         else
             @logger.debug("cmd: #{cmd} is not defined")
             raise Exception, "存在しない操作です"
