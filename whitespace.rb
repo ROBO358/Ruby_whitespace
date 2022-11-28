@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.18.0'
+Version = '0.18.1'
 
 class WHITESPACE
     # IMPシンボル表
@@ -297,7 +297,7 @@ class WHITESPACE
             @stack.push(@stack.last)
         when :copy
             num = _to_i(param)
-            @stack.push(@stack[-num])
+            @stack.push(@stack[-num-1])
         when :swap
             @stack[-1], @stack[-2] = @stack[-2], @stack[-1]
         when :discard
