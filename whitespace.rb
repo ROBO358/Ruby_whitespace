@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.18.1'
+Version = '0.19.0'
 
 class WHITESPACE
     # IMPシンボル表
@@ -303,6 +303,9 @@ class WHITESPACE
         when :discard
             @stack.pop
         when :slide
+            num = _to_i(param)
+            tmp = @stack.pop(num+1)
+            @stack.push(tmp[-1])
         else
             @logger.debug("cmd: #{cmd} is not defined")
             raise Exception, "存在しない操作です"
