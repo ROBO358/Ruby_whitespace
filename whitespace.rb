@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.15.0'
+Version = '0.16.0'
 
 class WHITESPACE
     # IMPシンボル表
@@ -399,6 +399,7 @@ class WHITESPACE
                 @logger.debug("FLOW: jumpn: skip(to: #{_to_i(param)})")
             end
         when :ret
+            @pc = @subroutine.pop
         when :end
             @logger.debug("FLOW: end")
             exit
