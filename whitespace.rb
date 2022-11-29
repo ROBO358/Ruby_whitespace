@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.19.1'
+Version = '0.19.2'
 
 class WHITESPACE
     # IMPシンボル表
@@ -180,7 +180,7 @@ class WHITESPACE
         case imp
         # stack操作
         when :stack
-            unless scanner.scan(/ |\n |\n\t|\n\n/)
+            unless scanner.scan(/ |\n |\t |\n\t|\n\n|\t\n/)
                 err = true
             else
                 cmd_symbol = Cmd_stack
