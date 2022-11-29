@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.19.2'
+Version = '0.19.3'
 
 class WHITESPACE
     # IMPシンボル表
@@ -316,20 +316,20 @@ class WHITESPACE
 
     private def _arithmetic(cmd, param)
         @logger.debug("ARITHMETIC: cmd: #{cmd}, param: #{param.inspect}")
-        f_elm = @stack.pop
         s_elm = @stack.pop
+        f_elm = @stack.pop
 
         case cmd
         when :add
-            @stack.push(s_elm + f_elm)
+            @stack.push(f_elm + s_elm)
         when :sub
-            @stack.push(s_elm - f_elm)
+            @stack.push(f_elm - s_elm)
         when :mul
-            @stack.push(s_elm * f_elm)
+            @stack.push(f_elm * s_elm)
         when :div
-            @stack.push(s_elm / f_elm)
+            @stack.push(f_elm / s_elm)
         when :mod
-            @stack.push(s_elm % f_elm)
+            @stack.push(f_elm % s_elm)
         else
             @logger.debug("cmd: #{cmd} is not defined")
             raise Exception, "存在しない操作です"
