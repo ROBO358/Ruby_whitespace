@@ -7,7 +7,7 @@ require 'strscan'
 # メジャーバージョン: 互換性のない変更(APIの変更など)
 # マイナーバージョン: 互換性のある新機能の追加(新しい機能の追加)
 # パッチバージョン: 互換性のあるバグ修正
-Version = '0.19.3'
+Version = '0.19.4'
 
 class WHITESPACE
     # IMPシンボル表
@@ -102,12 +102,18 @@ class WHITESPACE
         STDIN.sync = true
         STDOUT.sync = true
 
+        begin
         # 字句解析実行
         @tokens = _tokenize(buffer)
         @logger.debug("tokens: #{@tokens}")
 
         # 意味解析実行
         _evaluate()
+
+        rescue => e
+            @logger.fatal(e.message)
+            exit
+        end
 
     end
 
